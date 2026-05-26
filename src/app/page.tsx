@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Dumbbell, Trophy, BookOpen, ArrowRight, Users, Calendar } from 'lucide-react'
 import { formatDateTime, getStatusColor, getStatusLabel } from '@/lib/utils'
@@ -35,7 +35,7 @@ export default async function HomePage() {
       <section className="text-center mb-12">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-4">
           대학 생활을 더 풍요롭게,{' '}
-          <span className="text-primary-600">UniMatch</span>
+          <span className="text-primary-600">CBNUMatch</span>
         </h1>
         <p className="text-lg text-gray-500 max-w-2xl mx-auto">
           스포츠 경기 매칭부터 공모전 팀 빌딩, 스터디 그룹까지.<br />

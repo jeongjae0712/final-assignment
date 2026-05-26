@@ -57,7 +57,7 @@ export default async function MyPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{profile?.name}</h1>
             <p className="text-gray-500">{profile?.department} · {profile?.student_number ?? '학번 미등록'}</p>
-            <p className="text-sm text-gray-400">{user.email}</p>
+            <p className="text-sm text-gray-400">@{profile?.username}</p>
           </div>
           <div className="ml-auto">
             <Link href="/mypage/edit" className="btn-secondary text-sm">프로필 수정</Link>

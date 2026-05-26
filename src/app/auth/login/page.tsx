@@ -12,7 +12,7 @@ function LoginForm() {
   const redirectTo = searchParams.get('redirectTo') ?? '/'
   const supabase = createClient()
 
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,10 +22,11 @@ function LoginForm() {
     setError('')
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const fakeEmail = `${username.trim()}@cbnumatch.app`
+    const { error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password })
 
     if (error) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setError('아이디 또는 비밀번호가 올바르지 않습니다.')
       setLoading(false)
       return
     }
@@ -40,16 +41,16 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="form-group">
-          <label className="label" htmlFor="email">이메일</label>
+          <label className="label" htmlFor="username">아이디</label>
           <input
-            id="email"
-            type="email"
+            id="username"
+            type="text"
             className="input-field"
-            placeholder="학교 이메일 입력"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            placeholder="아이디 입력"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
             required
-            autoComplete="email"
+            autoComplete="username"
           />
         </div>
 
@@ -95,8 +96,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎓</div>
-          <h1 className="text-3xl font-bold text-gray-900">UniMatch</h1>
-          <p className="text-gray-500 mt-2">대학교 스포츠·공모전·스터디 매칭 플랫폼</p>
+          <h1 className="text-3xl font-bold text-gray-900">CBNUMatch</h1>
+          <p className="text-gray-500 mt-2">충북대학교 스포츠·공모전·스터디 매칭 플랫폼</p>
         </div>
         <Suspense fallback={<div className="card p-8 animate-pulse h-64" />}>
           <LoginForm />

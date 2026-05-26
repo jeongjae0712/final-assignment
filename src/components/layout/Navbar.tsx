@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -67,7 +67,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary-600">
             <span className="text-2xl">🎓</span>
-            <span>UniMatch</span>
+            <span>CBNUMatch</span>
           </Link>
 
           {/* Desktop Nav */}

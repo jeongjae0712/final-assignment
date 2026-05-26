@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ export default function SignupPage() {
   const supabase = createClient()
 
   const [form, setForm] = useState({
-    email: '',
+    username: '',
     password: '',
     passwordConfirm: '',
     name: '',
@@ -23,16 +23,17 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    )
-  }
+  const toggleTag = (tag: string) =>
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    if (!/^[a-zA-Z0-9_]{4,20}$/.test(form.username)) {
+      setError('아이디는 4~20자의 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.')
+      return
+    }
     if (form.password !== form.passwordConfirm) {
       setError('비밀번호가 일치하지 않습니다.')
       return
@@ -48,11 +49,27 @@ export default function SignupPage() {
 
     setLoading(true)
 
+    // 아이디 중복 확인
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', form.username)
+      .maybeSingle()
+
+    if (existing) {
+      setError('이미 사용 중인 아이디입니다.')
+      setLoading(false)
+      return
+    }
+
+    const fakeEmail = `${form.username}@cbnumatch.app`
+
     const { error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
+      email: fakeEmail,
       password: form.password,
       options: {
         data: {
+          username: form.username,
           name: form.name,
           department: form.department,
           student_number: form.studentNumber,
@@ -63,19 +80,19 @@ export default function SignupPage() {
 
     if (signUpError) {
       setError(signUpError.message === 'User already registered'
-        ? '이미 등록된 이메일입니다.'
+        ? '이미 등록된 아이디입니다.'
         : signUpError.message)
       setLoading(false)
       return
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: form.email,
+      email: fakeEmail,
       password: form.password,
     })
 
     if (signInError) {
-      setError('가입은 완료됐습니다. 로그인 페이지에서 로그인해 주세요.')
+      setError('회원가입이 완료되었습니다. 로그인 페이지에서 로그인해 주세요.')
       setLoading(false)
       router.push('/auth/login')
       return
@@ -90,20 +107,19 @@ export default function SignupPage() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🎓</div>
-          <h1 className="text-3xl font-bold text-gray-900">UniMatch</h1>
+          <h1 className="text-3xl font-bold text-gray-900">CBNUMatch</h1>
           <p className="text-gray-500 mt-2">회원가입</p>
         </div>
 
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 기본 정보 */}
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group col-span-2">
-                <label className="label" htmlFor="email">학교 이메일 *</label>
-                <input id="email" type="email" className="input-field"
-                  placeholder="example@univ.ac.kr"
-                  value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                  required />
+                <label className="label" htmlFor="username">아이디 *</label>
+                <input id="username" type="text" className="input-field"
+                  placeholder="영문/숫자/밑줄, 4~20자"
+                  value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
+                  required autoComplete="username" />
               </div>
 
               <div className="form-group">
@@ -111,7 +127,7 @@ export default function SignupPage() {
                 <input id="password" type="password" className="input-field"
                   placeholder="6자 이상"
                   value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                  required />
+                  required autoComplete="new-password" />
               </div>
 
               <div className="form-group">
@@ -119,7 +135,7 @@ export default function SignupPage() {
                 <input id="passwordConfirm" type="password" className="input-field"
                   placeholder="비밀번호 재입력"
                   value={form.passwordConfirm} onChange={e => setForm(p => ({ ...p, passwordConfirm: e.target.value }))}
-                  required />
+                  required autoComplete="new-password" />
               </div>
 
               <div className="form-group">
@@ -133,43 +149,36 @@ export default function SignupPage() {
               <div className="form-group">
                 <label className="label" htmlFor="studentNumber">학번</label>
                 <input id="studentNumber" type="text" className="input-field"
-                  placeholder="예: 20240001"
+                  placeholder="예: 2024000001"
                   value={form.studentNumber} onChange={e => setForm(p => ({ ...p, studentNumber: e.target.value }))} />
               </div>
 
               <div className="form-group col-span-2">
                 <label className="label" htmlFor="department">학과 *</label>
                 <select id="department" className="input-field"
-                  value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))}
-                  required>
+                  value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} required>
                   <option value="">학과 선택</option>
                   {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* 관심 분야 */}
             <div className="form-group">
               <label className="label">관심 분야 (선택)</label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {STUDY_CATEGORIES.map(tag => (
-                  <button key={tag} type="button"
-                    onClick={() => toggleTag(tag)}
+                  <button key={tag} type="button" onClick={() => toggleTag(tag)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                       selectedTags.includes(tag)
                         ? 'bg-primary-600 text-white border-primary-600'
                         : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
-                    }`}>
-                    {tag}
-                  </button>
+                    }`}>{tag}</button>
                 ))}
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {error}
-              </div>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
             )}
 
             <button type="submit" className="btn-primary w-full justify-center py-2.5" disabled={loading}>
@@ -180,9 +189,7 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             이미 계정이 있으신가요?{' '}
-            <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">
-              로그인
-            </Link>
+            <Link href="/auth/login" className="text-primary-600 hover:underline font-medium">로그인</Link>
           </p>
         </div>
       </div>

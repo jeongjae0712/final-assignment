@@ -21,6 +21,7 @@ create type location_type      as enum ('online', 'offline');
 create table if not exists public.users (
   id             uuid        references auth.users on delete cascade primary key,
   email          text        not null,
+  username       text        not null unique default '',
   name           text        not null default '',
   department     text        not null default '',
   student_number text,
