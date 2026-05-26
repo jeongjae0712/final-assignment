@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(npm run *)",
+      "PowerShell(git init *)",
+      "PowerShell(gh *)",
+      "PowerShell(git config *)",
+      "PowerShell(git add *)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git add *)"
+    ]
+  }
+}
