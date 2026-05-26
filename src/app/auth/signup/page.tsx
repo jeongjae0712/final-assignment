@@ -22,7 +22,6 @@ export default function SignupPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -49,7 +48,7 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -59,37 +58,31 @@ export default function SignupPage() {
           student_number: form.studentNumber,
           interest_tags: selectedTags,
         },
-        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
 
-    if (error) {
-      setError(error.message === 'User already registered'
+    if (signUpError) {
+      setError(signUpError.message === 'User already registered'
         ? '이미 등록된 이메일입니다.'
-        : error.message)
+        : signUpError.message)
       setLoading(false)
       return
     }
 
-    setDone(true)
-  }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    })
 
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center card p-10">
-          <div className="text-5xl mb-4">📧</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">이메일 인증을 완료해 주세요</h2>
-          <p className="text-gray-500 text-sm">
-            <strong>{form.email}</strong>으로 인증 메일을 발송했습니다.<br />
-            메일의 링크를 클릭하면 가입이 완료됩니다.
-          </p>
-          <Link href="/auth/login" className="btn-primary mt-6 justify-center">
-            로그인 페이지로
-          </Link>
-        </div>
-      </div>
-    )
+    if (signInError) {
+      setError('가입은 완료됐습니다. 로그인 페이지에서 로그인해 주세요.')
+      setLoading(false)
+      router.push('/auth/login')
+      return
+    }
+
+    router.push('/')
+    router.refresh()
   }
 
   return (
