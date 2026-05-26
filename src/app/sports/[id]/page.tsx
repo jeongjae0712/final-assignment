@@ -54,8 +54,9 @@ export default async function SportMatchDetailPage({ params }: { params: { id: s
           <div className="card p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{match.title}</h1>
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-2xl font-bold text-gray-900">{match.sport_type}</h1>
+                  <span className="badge bg-gray-100 text-gray-700">{match.sport_type}</span>
                   <span className={`badge ${match.match_mode === 'department' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                     {match.match_mode === 'department' ? '학과 대항전' : '개인 매칭'}
                   </span>

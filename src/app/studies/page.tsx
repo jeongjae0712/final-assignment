@@ -18,6 +18,7 @@ export default async function StudiesPage({ searchParams }: PageProps) {
       creator:users(name, department),
       study_applications(id, user_id, status)
     `)
+    .eq('status', 'recruiting')
     .order('created_at', { ascending: false })
 
   if (searchParams.category) query = query.contains('category_tags', [searchParams.category])

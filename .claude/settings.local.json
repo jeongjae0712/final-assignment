@@ -9,7 +9,20 @@
       "PowerShell(git add *)",
       "Bash(git init *)",
       "Bash(git config *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(vercel --version)",
+      "Bash(gh --version)",
+      "Bash(npm install *)",
+      "Bash(where gh *)",
+      "Bash(where vercel *)",
+      "Bash(gh auth *)",
+      "Bash(vercel whoami *)",
+      "Bash(winget install *)",
+      "PowerShell(gh auth *)",
+      "PowerShell(Out-Null *)",
+      "Bash(xargs cat)",
+      "Bash(python3 - __TRACKED_VAR__/page.tsxfinal-assignment)"
     ]
   }
 }
