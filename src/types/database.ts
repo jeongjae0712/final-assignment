@@ -1,10 +1,10 @@
-export type MatchMode = 'department' | 'individual'
+﻿export type MatchMode = 'department' | 'individual'
 export type MatchStatus = 'open' | 'matched' | 'cancelled'
-export type ParticipantStatus = 'pending' | 'confirmed' | 'waitlisted'
+export type ParticipantStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected'
 export type ContestAppStatus = 'waiting' | 'matched'
 export type StudyStatus = 'recruiting' | 'active' | 'expired'
 export type StudyAppStatus = 'pending' | 'accepted' | 'rejected'
-export type NotifType = 'matched' | 'applied' | 'accepted' | 'rejected' | 'reminder' | 'cancelled'
+export type NotifType = 'matched' | 'applied' | 'accepted' | 'rejected' | 'reminder' | 'cancelled' | 'message'
 export type NotifRefType = 'sport' | 'contest' | 'study'
 export type LocationType = 'online' | 'offline'
 
@@ -46,6 +46,17 @@ export interface SportParticipant {
   status: ParticipantStatus
   joined_at: string
   user?: User
+}
+export interface MatchChat {
+  id: string
+  match_id: string
+  sender_id: string
+  receiver_id: string
+  message: string
+  is_read: boolean
+  created_at: string
+  sender?: User
+  receiver?: User
 }
 
 export interface Contest {
@@ -174,7 +185,15 @@ export type Database = {
         }
         Update: Partial<Omit<StudyApplication, 'id' | 'user'>>
       }
-      notifications: {
+      match_chats: {
+        Row: MatchChat
+        Insert: Omit<MatchChat, 'id' | 'created_at' | 'is_read' | 'sender' | 'receiver'> & {
+          id?: string
+          created_at?: string
+          is_read?: boolean
+        }
+        Update: Partial<Omit<MatchChat, 'id' | 'sender' | 'receiver'>>
+      }      notifications: {
         Row: Notification
         Insert: Omit<Notification, 'id' | 'created_at' | 'is_read'> & {
           id?: string

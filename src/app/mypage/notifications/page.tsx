@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/types/database'
-import { ArrowLeft, Bell, CheckCheck } from 'lucide-react'
+import { ArrowLeft, Bell } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
 
 const refTypeHref = (ref_type: string, ref_id: string) => {
@@ -15,10 +15,28 @@ const refTypeHref = (ref_type: string, ref_id: string) => {
 
 const typeIcon = (type: string) => {
   const map: Record<string, string> = {
-    matched: '🎉', applied: '📩', accepted: '✅', rejected: '❌',
-    reminder: '⏰', cancelled: '❌',
+    matched:   '🎉',
+    applied:   '📋',
+    accepted:  '✅',
+    rejected:  '❌',
+    reminder:  '⏰',
+    cancelled: '🔕',
+    message:   '💬',
   }
   return map[type] ?? '🔔'
+}
+
+const typeLabel = (type: string) => {
+  const map: Record<string, string> = {
+    matched:   '매칭 완료',
+    applied:   '새 참여 신청',
+    accepted:  '참여 확정',
+    rejected:  '참여 거절',
+    reminder:  '리마인더',
+    cancelled: '취소',
+    message:   '새 메시지',
+  }
+  return map[type] ?? '알림'
 }
 
 export default function NotificationsPage() {
@@ -41,7 +59,7 @@ export default function NotificationsPage() {
       setNotifications(data ?? [])
       setLoading(false)
 
-      // Mark all as read
+      // 전체 읽음 처리
       await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -53,7 +71,9 @@ export default function NotificationsPage() {
 
     const channel = supabase
       .channel('notifications-page')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+      }, payload => {
         setNotifications(prev => [payload.new as Notification, ...prev])
       })
       .subscribe()
@@ -93,18 +113,26 @@ export default function NotificationsPage() {
       {notifications.length ? (
         <div className="space-y-2">
           {notifications.map(notif => (
-            <Link key={notif.id} href={refTypeHref(notif.ref_type, notif.ref_id)}
+            <Link
+              key={notif.id}
+              href={refTypeHref(notif.ref_type, notif.ref_id)}
               className={`card p-4 flex items-start gap-3 hover:border-primary-200 transition-all ${
                 !notif.is_read ? 'border-primary-300 bg-primary-50/30' : ''
-              }`}>
-              <span className="text-xl shrink-0">{typeIcon(notif.type)}</span>
+              }`}
+            >
+              <span className="text-xl shrink-0 mt-0.5">{typeIcon(notif.type)}</span>
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-semibold text-gray-500">
+                    {typeLabel(notif.type)}
+                  </span>
+                  {!notif.is_read && (
+                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full inline-block" />
+                  )}
+                </div>
                 <p className="text-sm text-gray-900 leading-snug">{notif.message}</p>
                 <p className="text-xs text-gray-400 mt-1">{formatRelativeTime(notif.created_at)}</p>
               </div>
-              {!notif.is_read && (
-                <div className="w-2 h-2 bg-primary-500 rounded-full shrink-0 mt-1.5" />
-              )}
             </Link>
           ))}
         </div>

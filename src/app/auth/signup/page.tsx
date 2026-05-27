@@ -49,57 +49,47 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    // 아이디 중복 확인
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', form.username)
-      .maybeSingle()
-
-    if (existing) {
-      setError('이미 사용 중인 아이디입니다.')
-      setLoading(false)
-      return
-    }
-
-    const fakeEmail = `${form.username}@cbnumatch.app`
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: fakeEmail,
-      password: form.password,
-      options: {
-        data: {
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           username: form.username,
+          password: form.password,
           name: form.name,
           department: form.department,
-          student_number: form.studentNumber,
-          interest_tags: selectedTags,
-        },
-      },
-    })
+          studentNumber: form.studentNumber,
+          interestTags: selectedTags,
+        }),
+      })
 
-    if (signUpError) {
-      setError(signUpError.message === 'User already registered'
-        ? '이미 등록된 아이디입니다.'
-        : signUpError.message)
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error ?? '회원가입에 실패했습니다.')
+        setLoading(false)
+        return
+      }
+
+      const fakeEmail = form.username + '@cbnumatch.app'
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: form.password,
+      })
+
+      if (signInError) {
+        setError('회원가입이 완료되었습니다. 로그인 페이지에서 로그인해 주세요.')
+        setLoading(false)
+        router.push('/auth/login')
+        return
+      }
+
+      router.push('/')
+      router.refresh()
+    } catch (err: unknown) {
+      setError('서버 연결에 실패했습니다: ' + (err instanceof Error ? err.message : String(err)))
       setLoading(false)
-      return
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: fakeEmail,
-      password: form.password,
-    })
-
-    if (signInError) {
-      setError('회원가입이 완료되었습니다. 로그인 페이지에서 로그인해 주세요.')
-      setLoading(false)
-      router.push('/auth/login')
-      return
-    }
-
-    router.push('/')
-    router.refresh()
   }
 
   return (

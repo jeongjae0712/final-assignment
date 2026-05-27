@@ -1,8 +1,9 @@
-﻿import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { Dumbbell, Trophy, BookOpen, Plus, Calendar, Users } from 'lucide-react'
+import { Dumbbell, Trophy, BookOpen, Plus, Calendar, Users, Pencil } from 'lucide-react'
 import { formatDate, formatDateTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+import DeleteMatchButton from '@/components/sports/DeleteMatchButton'
 
 export default async function MyPage() {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export default async function MyPage() {
     { data: myCreatedStudies },
   ] = await Promise.all([
     supabase.from('sport_participants')
-      .select('*, match:sport_matches(id, sport_type, match_mode, dept_host, dept_guest, scheduled_at, status)')
+      .select('*, match:sport_matches(id, title, sport_type, match_mode, dept_host, dept_guest, scheduled_at, status, creator_id)')
       .eq('user_id', user.id)
       .order('joined_at', { ascending: false })
       .limit(10),
@@ -35,10 +36,9 @@ export default async function MyPage() {
       .order('applied_at', { ascending: false })
       .limit(10),
     supabase.from('sport_matches')
-      .select('*, sport_participants(id)')
+      .select('*, sport_participants(id, status)')
       .eq('creator_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .order('created_at', { ascending: false }),
     supabase.from('studies')
       .select('*, study_applications(id, status)')
       .eq('creator_id', user.id)
@@ -73,7 +73,7 @@ export default async function MyPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sports */}
+        {/* ── 스포츠 ── */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -84,58 +84,99 @@ export default async function MyPage() {
             </Link>
           </div>
 
-          {/* My created matches */}
-          {myCreatedSports?.length > 0 && (
+          {/* 내가 개설한 경기 */}
+          {myCreatedSports && myCreatedSports.length > 0 && (
             <div>
-              <p className="text-xs text-gray-400 mb-2 font-medium">내가 개설한 경기</p>
+              <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">내가 개설한 경기</p>
               <div className="space-y-2">
-                {myCreatedSports.map((m: any) => (
-                  <Link key={m.id} href={`/sports/${m.id}`}
-                    className="card p-3 flex items-center gap-3 hover:border-blue-200 transition-all">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">{m.sport_type}</span>
-                        <span className={`badge text-xs ${getStatusColor(m.status)}`}>{getStatusLabel(m.status)}</span>
+                {myCreatedSports.map((m: any) => {
+                  const totalCount = m.sport_participants?.length ?? 0
+                  const pendingCount = m.sport_participants?.filter((p: any) => p.status === 'pending').length ?? 0
+                  return (
+                    <div key={m.id} className="card p-3 hover:border-blue-200 transition-all">
+                      {/* 제목 & 상태 */}
+                      <div className="flex items-start gap-2 mb-2">
+                        <Link href={`/sports/${m.id}`} className="flex-1 min-w-0 group">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-900 group-hover:text-primary-700 truncate">
+                              {m.title}
+                            </span>
+                            <span className={`badge text-xs shrink-0 ${getStatusColor(m.status)}`}>
+                              {getStatusLabel(m.status)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {m.sport_type} · {formatDateTime(m.scheduled_at)}
+                          </p>
+                        </Link>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        참여 {m.sport_participants?.length ?? 0}명 · {formatDateTime(m.scheduled_at)}
-                      </p>
+
+                      {/* 참여 현황 */}
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Users size={11} /> 참여 {totalCount}명
+                        </span>
+                        {pendingCount > 0 && (
+                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full">
+                            대기 {pendingCount}건
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 액션 버튼 */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
+                        <Link href={`/sports/${m.id}`}
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg transition-colors">
+                          <Users size={13} />
+                          신청 관리
+                        </Link>
+                        <Link href={`/sports/${m.id}/edit`}
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-100 rounded-lg transition-colors">
+                          <Pencil size={13} />
+                          수정
+                        </Link>
+                        <DeleteMatchButton matchId={m.id} />
+                      </div>
                     </div>
-                  </Link>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* My participations */}
+          {/* 참여 신청한 경기 */}
           <div>
-            <p className="text-xs text-gray-400 mb-2 font-medium">참여 신청한 경기</p>
-            {mySportParticipations?.filter((p: any) => p.match?.creator_id !== user.id).length ? (
+            <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">참여 신청한 경기</p>
+            {mySportParticipations?.filter((p: any) => p.match && p.match.creator_id !== user.id).length ? (
               <div className="space-y-2">
-                {mySportParticipations?.filter((p: any) => p.match).map((p: any) => (
-                  <Link key={p.id} href={`/sports/${p.match.id}`}
-                    className="card p-3 flex items-center gap-3 hover:border-blue-200 transition-all">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">{p.match.sport_type}</span>
-                        <span className={`badge text-xs ${getStatusColor(p.status)}`}>{getStatusLabel(p.status)}</span>
+                {mySportParticipations
+                  ?.filter((p: any) => p.match && p.match.creator_id !== user.id)
+                  .map((p: any) => (
+                    <Link key={p.id} href={`/sports/${p.match.id}`}
+                      className="card p-3 flex items-center gap-3 hover:border-blue-200 transition-all">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {p.match.title ?? p.match.sport_type}
+                          </span>
+                          <span className={`badge text-xs shrink-0 ${getStatusColor(p.status)}`}>
+                            {getStatusLabel(p.status)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {p.match.sport_type} · {formatDateTime(p.match.scheduled_at)}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatDateTime(p.match.scheduled_at)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
               </div>
             ) : (
-              <div className="card p-4 text-center text-gray-400 text-sm">
-                참여한 경기가 없습니다
-              </div>
+              <div className="card p-4 text-center text-gray-400 text-sm">참여한 경기가 없습니다</div>
             )}
           </div>
         </section>
 
-        {/* Contests */}
+        {/* ── 공모전 ── */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Trophy size={18} className="text-amber-600" /> 공모전 신청
@@ -162,16 +203,14 @@ export default async function MyPage() {
               ))}
             </div>
           ) : (
-            <div className="card p-4 text-center text-gray-400 text-sm">
-              신청한 공모전이 없습니다
-            </div>
+            <div className="card p-4 text-center text-gray-400 text-sm">신청한 공모전이 없습니다</div>
           )}
           <Link href="/contests" className="btn-secondary w-full justify-center text-sm">
             공모전 탐색하기
           </Link>
         </section>
 
-        {/* Studies */}
+        {/* ── 스터디 ── */}
         <section className="space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -183,7 +222,6 @@ export default async function MyPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Created studies */}
             {myCreatedStudies?.map((s: any) => {
               const acceptedCount = s.study_applications?.filter((a: any) => a.status === 'accepted').length ?? 0
               const pendingCount = s.study_applications?.filter((a: any) => a.status === 'pending').length ?? 0
@@ -207,7 +245,6 @@ export default async function MyPage() {
               )
             })}
 
-            {/* Joined studies */}
             {myStudyApps?.filter((a: any) => a.study?.creator_id !== user.id).map((app: any) => (
               <Link key={app.id} href={`/studies/${app.study_id}`}
                 className="card p-4 block hover:border-green-200 transition-all">
@@ -225,9 +262,7 @@ export default async function MyPage() {
             ))}
 
             {(!myCreatedStudies?.length && !myStudyApps?.length) && (
-              <div className="card p-4 text-center text-gray-400 text-sm col-span-2">
-                참여한 스터디가 없습니다
-              </div>
+              <div className="card p-4 text-center text-gray-400 text-sm col-span-2">참여한 스터디가 없습니다</div>
             )}
           </div>
         </section>

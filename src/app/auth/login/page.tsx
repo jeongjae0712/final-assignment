@@ -26,7 +26,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password })
 
     if (error) {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.')
+      setError(error.message)
       setLoading(false)
       return
     }
