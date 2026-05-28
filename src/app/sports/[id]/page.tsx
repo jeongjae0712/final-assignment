@@ -48,7 +48,7 @@ export default async function SportMatchDetailPage({ params }: { params: Promise
     if (!acc[dept]) acc[dept] = []
     acc[dept].push(p)
     return acc
-  }, {})
+  }, {} as Record<string, any[]>)
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">

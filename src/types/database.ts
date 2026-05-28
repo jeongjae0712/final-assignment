@@ -202,6 +202,11 @@ export type Database = {
         }
         Update: Partial<Omit<Notification, 'id'>>
       }
+  }
+  Functions: {
+    send_chat_notification: {
+      Args: { p_receiver_id: string; p_match_id: string; p_preview: string }
+      Returns: void
     }
   }
 }
