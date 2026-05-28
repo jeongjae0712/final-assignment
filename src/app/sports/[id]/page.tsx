@@ -43,12 +43,12 @@ export default async function SportMatchDetailPage({ params }: { params: Promise
   const individualParticipants = nonCreatorParticipants.filter((p: any) => p.team_side === 'individual')
   const isPast = new Date(match.deadline) < new Date()
 
-  // 寃뚯뒪???숆낵蹂?洹몃９??  const guestByDept = guestParticipants.reduce<Record<string, any[]>>((acc, p: any) => {
-    const dept = p.user?.department ?? '?????놁쓬'
-    if (!acc[dept]) acc[dept] = []
-    acc[dept].push(p)
-    return acc
-  }, {} as Record<string, any[]>)
+  // 寃뚯뒪???숆낵蹂?洹몃９??  const guestByDept: Record<string, any[]> = {}
+  for (const p of guestParticipants as any[]) {
+    const dept = (p as any).user?.department ?? '알 수 없음'
+    if (!guestByDept[dept]) guestByDept[dept] = []
+    guestByDept[dept].push(p)
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
