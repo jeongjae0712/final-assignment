@@ -119,12 +119,12 @@ export default function ParticipantApprovalPanel({
   const guestParticipants = participants.filter(p => p.team_side === 'guest')
   const individualParticipants = participants.filter(p => p.team_side === 'individual')
 
-  const guestByDept = guestParticipants.reduce<Record<string, Participant[]>>((acc, p) => {
-    const dept = p.user?.department ?? '?????놁쓬'
-    if (!acc[dept]) acc[dept] = []
-    acc[dept].push(p)
-    return acc
-  }, {} as Record<string, Participant[]>)
+  const guestByDept: Record<string, Participant[]> = {}
+  for (const p of guestParticipants) {
+    const dept = p.user?.department ?? '알 수 없음'
+    if (!guestByDept[dept]) guestByDept[dept] = []
+    guestByDept[dept].push(p)
+  }
 
   // ?? ?숆낵 ???쟾 ????????????????????????????????????????????
   if (matchMode === 'department') {
